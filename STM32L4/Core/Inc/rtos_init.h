@@ -12,5 +12,6 @@ typedef struct {
 } task_init_t;
 
 TaskHandle_t create_static_task(const task_init_t *);
+void delay_wrapper_ms(uint32_t);
 
 #endif

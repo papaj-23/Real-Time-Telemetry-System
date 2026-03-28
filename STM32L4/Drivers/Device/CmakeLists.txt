@@ -1,0 +1,13 @@
+add_library(device STATIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source/system_stm32l4xx.c
+)
+
+target_include_directories(device
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/Include
+)
+
+target_link_libraries(device
+    PUBLIC
+        cmsis
+)

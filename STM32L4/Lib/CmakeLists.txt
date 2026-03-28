@@ -1,0 +1,1 @@
+add_subdirectory(mpu-6050)
