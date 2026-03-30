@@ -22,8 +22,6 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_options(${PROJECT_NAME} PRIVATE
-    ${CPU_OPTS}
-    -Wl,--gc-sections
     -Wl,-Map=${PROJECT_NAME}.map
     -T${LINKER_SCRIPT}
 )
@@ -40,7 +38,7 @@ target_include_directories(${PROJECT_NAME}
 )
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${TOOLCHAIN_PREFIX}objcopy -O binary $<TARGET_FILE:${PROJECT_NAME}> ${PROJECT_NAME}.bin
-    COMMAND ${TOOLCHAIN_PREFIX}objcopy -O ihex   $<TARGET_FILE:${PROJECT_NAME}> ${PROJECT_NAME}.hex
-    COMMAND ${TOOLCHAIN_PREFIX}size $<TARGET_FILE:${PROJECT_NAME}>
+    COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${PROJECT_NAME}> ${PROJECT_NAME}.bin
+    COMMAND ${CMAKE_OBJCOPY} -O ihex   $<TARGET_FILE:${PROJECT_NAME}> ${PROJECT_NAME}.hex
+    COMMAND ${CMAKE_SIZE} -B $<TARGET_FILE:${PROJECT_NAME}>
 )

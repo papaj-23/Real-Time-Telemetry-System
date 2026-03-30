@@ -11,3 +11,7 @@ target_link_libraries(device
     PUBLIC
         cmsis
 )
+
+target_compile_definitions(device PUBLIC
+    STM32L432xx
+)

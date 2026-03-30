@@ -12,7 +12,6 @@ target_include_directories(hal
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/Inc
         ${CMAKE_CURRENT_SOURCE_DIR}/Inc/Legacy
-    PRIVATE
         ${CMAKE_SOURCE_DIR}/Core/Inc
 )
 
@@ -22,6 +21,5 @@ target_link_libraries(hal
 )
 
 target_compile_definitions(hal PUBLIC
-    STM32L432xx
     USE_HAL_DRIVER
 )

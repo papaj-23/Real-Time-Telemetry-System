@@ -7,6 +7,8 @@
 
 #define BURST_COUNT 600
 
+static void MPU6050_data_receive_handler(void* pvParameters);
+
 /* MPU6050 data transfer task */
 #define MPU6050_DATA_RECEIVE_STACK_SIZE 512
 static StackType_t mpu6050_data_receive_stack[MPU6050_DATA_RECEIVE_STACK_SIZE];

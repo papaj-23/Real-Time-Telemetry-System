@@ -2,7 +2,6 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 #include "init.h"
-#include "imu_data_input.h"
 #include "mpu-6050.h"
 
 extern TaskHandle_t mpu6050_data_receive_handle;
