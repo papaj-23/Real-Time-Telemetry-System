@@ -23,7 +23,7 @@ static const task_init_t mpu6050_data_receive_init = {
 };
 
 uint8_t dma_i2c_rx_buf[14] = {0};
-MPU_6050_rawdata_t inter_buffer;
+MPU_6050_rawdata_t inter_buffer = {0};
 
 MPU_6050_t mpu_handle;
 MPU_6050_selftest_t selftest_results;
@@ -43,7 +43,7 @@ static void MPU6050_data_receive_handler(void* pvParameters) {
     uint32_t events = 0U;
     MPU_6050_init(&mpu_handle);
     MPU_6050_self_test(&mpu_handle, &selftest_results);
-    MPU_6050_set_lp_wakeup_freq(&mpu_handle, F_40HZ);
+    //MPU_6050_set_lp_wakeup_freq(&mpu_handle, F_40HZ);
     MPU_6050_set_mode(&mpu_handle, MPU_SINGLE_MODE);
 
     for(;;) {
@@ -58,7 +58,7 @@ static void MPU6050_data_receive_handler(void* pvParameters) {
         /* i2c dma transfer complete */
         if(events & 0x02U) {
             MPU_6050_parse_payload(&mpu_handle);
-            current_data = MPU_6050_payload_to_readable(&mpu_handle);
+            //current_data = MPU_6050_payload_to_readable(&mpu_handle);
             if(mpu_handle.fifo_oflow_flag == 1U) {
                 MPU_6050_fifo_reset(&mpu_handle);
             }
