@@ -12,9 +12,9 @@
 
 #define WIFI_SSID      "outside_left"
 #define WIFI_PASS      "korabiewka"
-#define MAXIMUM_RETRY  5
+#define MAXIMUM_RETRY  10
 
-static const char *TAG = "wifi station";
+static const char *TAG = "WIFI STATION:";
 static EventGroupHandle_t wifi_event_group;
 
 static void event_handler(void* arg, esp_event_base_t event_base,

@@ -1,0 +1,16 @@
+idf_component_register(
+    SRCS
+        "rf_init.c"
+        "rf_link.c"
+        "rf_peripherals.c"
+        "rf_driver/driver_nrf905.c"
+        "rf_driver/driver_nrf905_interface.c"
+
+    INCLUDE_DIRS
+        "include"
+        "rf_driver/include"
+
+    PRIV_REQUIRES
+        esp_driver_spi
+        esp_driver_gpio
+)

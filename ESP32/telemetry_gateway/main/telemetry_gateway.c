@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "wifi_connect.h"
+#include "udp_client.h"
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -26,7 +27,9 @@ void blink_task(void *arg)
 
 void app_main(void)
 {
-    xTaskCreate(blink_task, "blink", 2048, NULL, 5, NULL);
     my_wifi_connect();
+    xTaskCreate(blink_task, "blink", 2048, NULL, 5, NULL);
+    start_udp_client();
+    
     
 }
