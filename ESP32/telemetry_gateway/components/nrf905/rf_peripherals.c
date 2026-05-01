@@ -1,6 +1,8 @@
 #include "rf_peripherals.h"
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include <string.h>
 
 #define RF_SPI_HOST         SPI2_HOST
@@ -13,6 +15,7 @@
 #define RF_SPI_QUEUE_SIZE   4
 
 static spi_device_handle_t s_rf_spi;
+extern TaskHandle_t nrf905_task_handle;
 
 /* SPI config */
 
@@ -84,7 +87,7 @@ esp_err_t rf_spi_transmit(uint8_t *tx, uint8_t *rx, uint16_t len)
 
 esp_err_t rf_spi_write_reg(uint8_t reg, uint8_t *data, uint16_t len)
 {
-    uint8_t tx[64] = {0};
+    uint8_t tx[32] = {0};
 
     if ((len + 1) > sizeof(tx)) {
         return ESP_ERR_INVALID_SIZE;
@@ -107,8 +110,8 @@ esp_err_t rf_spi_write_reg(uint8_t reg, uint8_t *data, uint16_t len)
 
 esp_err_t rf_spi_read_reg(uint8_t reg, uint8_t *data, uint16_t len)
 {
-    uint8_t tx[64] = {0};
-    uint8_t rx[64] = {0};
+    uint8_t tx[32] = {0};
+    uint8_t rx[32] = {0};
 
     if ((len + 1) > sizeof(tx)) {
         return ESP_ERR_INVALID_SIZE;
@@ -187,6 +190,8 @@ esp_err_t rf_gpio_DR_init(void)
     if (err != ESP_OK) {
         return err;
     }
+
+    return ESP_OK;
 }
 
 esp_err_t rf_gpio_DR_deinit(void)
@@ -196,5 +201,7 @@ esp_err_t rf_gpio_DR_deinit(void)
 
 void rf_dr_isr(void *arg)
 {
-
+    BaseType_t hpw = pdFALSE;
+    vTaskNotifyGiveFromISR(nrf905_task_handle, &hpw);
+    portYIELD_FROM_ISR(hpw);
 }

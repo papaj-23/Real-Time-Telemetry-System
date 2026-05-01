@@ -17,6 +17,7 @@
 #define HOST_IP_ADDR "192.168.0.114"
 #define PORT 16161
 
+TaskHandle_t udp_client_task_handle;
 static const char *TAG = "UDP CLIENT:";
 static const char *payload = "Message from ESP32";
 
@@ -89,5 +90,9 @@ static void udp_client_task(void *pvParameters)
 
 void start_udp_client(void) 
 {
-    xTaskCreate(udp_client_task, "udp_client", 4096, NULL, 6, NULL);
+    BaseType_t pd = xTaskCreate(udp_client_task, "udp_client",
+                                4096, NULL, 6, &udp_client_task_handle);
+    if(pd != pdPASS) {
+        ESP_LOGE(TAG, "Failed to create udp client task");
+    }
 }

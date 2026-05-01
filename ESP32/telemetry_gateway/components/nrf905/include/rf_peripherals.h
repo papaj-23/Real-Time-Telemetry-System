@@ -20,8 +20,8 @@ esp_err_t rf_gpio_output_init(uint32_t gpio);
 esp_err_t rf_gpio_output_deinit(uint32_t gpio);
 esp_err_t rf_gpio_output_write(uint32_t gpio, uint32_t level);
 
-esp_err_t rf_gpio_input_init(uint32_t gpio);
-esp_err_t rf_gpio_input_deinit(uint32_t gpio);
-int rf_gpio_input_read(uint32_t gpio);
+esp_err_t rf_gpio_DR_init(void);
+esp_err_t rf_gpio_DR_deinit(void);
+void rf_dr_isr(void *arg);
 
 #endif
