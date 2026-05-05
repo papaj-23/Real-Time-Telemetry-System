@@ -3,14 +3,15 @@
 #include "rf_peripherals.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
 #include "esp_log.h"
 
-#define MPU_6050_PAYLOAD_LEN    14U
+#define PAYLOAD_LEN    14U
 
 extern nrf905_handle_t rf_handle;
 TaskHandle_t nrf905_task_handle;
 QueueHandle_t mpu_queue_handle;
-static uint8_t rx_data[MPU_6050_PAYLOAD_LEN] = {0};
+static uint8_t rx_data[PAYLOAD_LEN] = {0};
 static const char *TAG = "RF TRANSCIEVER";
 
 static void nrf905_task_handler(void *pvParameters)
@@ -28,7 +29,7 @@ static void nrf905_task_handler(void *pvParameters)
             ESP_LOGI(TAG, "Data irq overlapped");
         }
 
-        if(nrf905_get_rx_payload(&rf_handle, rx_data, MPU_6050_PAYLOAD_LEN) != 0) {
+        if(nrf905_get_rx_payload(&rf_handle, rx_data, PAYLOAD_LEN) != 0) {
             ESP_LOGE(TAG, "Faied to get rx payload");
         }
 
@@ -46,6 +47,6 @@ void start_nrf905_thread(void)
         ESP_LOGE(TAG, "Failed to create nrf905 task");
     }
 
-    mpu_queue_handle = xQueueCreate(8, MPU_6050_PAYLOAD_LEN);
+    mpu_queue_handle = xQueueCreate(8, PAYLOAD_LEN);
 }
 

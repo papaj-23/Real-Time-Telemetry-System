@@ -1,0 +1,15 @@
+add_library(mpu6050_lib STATIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/mpu-6050.c
+)
+
+target_include_directories(mpu6050_lib
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/inc
+)
+
+target_link_libraries(mpu6050_lib
+    PUBLIC
+        hal
+    PRIVATE
+        m
+)

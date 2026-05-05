@@ -1,0 +1,12 @@
+add_library(nrf905_lib STATIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/driver_nrf905.c
+)
+
+target_include_directories(nrf905_lib
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/inc
+)
+
+target_link_libraries(nrf905_lib
+
+)

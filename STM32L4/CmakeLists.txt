@@ -11,14 +11,21 @@ add_subdirectory(Drivers)
 add_subdirectory(Lib)
 
 add_executable(${PROJECT_NAME}
-    ${CMAKE_SOURCE_DIR}/Core/Src/main.c
-    ${CMAKE_SOURCE_DIR}/Core/Src/init.c
+    ${CMAKE_SOURCE_DIR}/Core/main/main.c
+    ${CMAKE_SOURCE_DIR}/Core/main/init.c
+    ${CMAKE_SOURCE_DIR}/Core/main/stm32l4xx_hal_msp.c
+    ${CMAKE_SOURCE_DIR}/Core/main/stm32l4xx_it.c
+    ${CMAKE_SOURCE_DIR}/Core/main/callbacks.c
+    ${CMAKE_SOURCE_DIR}/Core/main/syscalls.c
+    ${CMAKE_SOURCE_DIR}/Core/main/sysmem.c
+
+    ${CMAKE_SOURCE_DIR}/Core/mpu6050/imu_data_input.c
+
+    ${CMAKE_SOURCE_DIR}/Core/nrf905/driver_nrf905_interface.c
+    ${CMAKE_SOURCE_DIR}/Core/nrf905/nrf905_init.c
+    ${CMAKE_SOURCE_DIR}/Core/nrf905/nrf905_link.c
+
     ${CMAKE_SOURCE_DIR}/Core/Startup/startup_stm32l432xx.s
-    ${CMAKE_SOURCE_DIR}/Core/Src/stm32l4xx_hal_msp.c
-    ${CMAKE_SOURCE_DIR}/Core/Src/stm32l4xx_it.c
-    ${CMAKE_SOURCE_DIR}/Core/Src/rtos_init.c
-    ${CMAKE_SOURCE_DIR}/Core/Src/imu_data_input.c
-    ${CMAKE_SOURCE_DIR}/Core/Src/callbacks.c
 )
 
 target_link_options(${PROJECT_NAME} PRIVATE
@@ -29,12 +36,15 @@ target_link_options(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME} PRIVATE
     freertos
     hal
-    mpu6050
+    mpu6050_lib
+    nrf905_lib
 )
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/Core/Inc
+        ${CMAKE_SOURCE_DIR}/Core/main/inc
+        ${CMAKE_SOURCE_DIR}/Core/mpu6050/inc
+        ${CMAKE_SOURCE_DIR}/Core/nrf905/inc
 )
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

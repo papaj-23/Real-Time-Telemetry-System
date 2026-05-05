@@ -270,7 +270,7 @@ uint8_t nrf905_interface_pwr_up_gpio_write(uint8_t data)
  */
 void nrf905_interface_delay_ms(uint32_t ms)
 {
-    vTaskDelay(ms/portTICK_PERIOD_MS);
+    vTaskDelay(pdMS_TO_TICKS(ms));
 }
 
 /**

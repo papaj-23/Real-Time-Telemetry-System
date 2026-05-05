@@ -87,7 +87,7 @@ esp_err_t rf_spi_transmit(uint8_t *tx, uint8_t *rx, uint16_t len)
 
 esp_err_t rf_spi_write_reg(uint8_t reg, uint8_t *data, uint16_t len)
 {
-    uint8_t tx[32] = {0};
+    uint8_t tx[64] = {0};
 
     if ((len + 1) > sizeof(tx)) {
         return ESP_ERR_INVALID_SIZE;
@@ -110,8 +110,8 @@ esp_err_t rf_spi_write_reg(uint8_t reg, uint8_t *data, uint16_t len)
 
 esp_err_t rf_spi_read_reg(uint8_t reg, uint8_t *data, uint16_t len)
 {
-    uint8_t tx[32] = {0};
-    uint8_t rx[32] = {0};
+    uint8_t tx[64] = {0};
+    uint8_t rx[64] = {0};
 
     if ((len + 1) > sizeof(tx)) {
         return ESP_ERR_INVALID_SIZE;
@@ -172,7 +172,7 @@ esp_err_t rf_gpio_DR_init(void)
         .pin_bit_mask = 1ULL << RF_DR_GPIO,
         .mode = GPIO_MODE_INPUT,
         .pull_up_en = GPIO_PULLUP_DISABLE,
-        .pull_down_en = GPIO_PULLDOWN_ENABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
         .intr_type = GPIO_INTR_POSEDGE
     };
 

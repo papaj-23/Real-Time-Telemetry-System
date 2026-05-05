@@ -28,7 +28,6 @@
  extern "C" {
 #endif
 
-
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 
@@ -75,7 +74,7 @@
 /*#define HAL_SD_MODULE_ENABLED   */
 /*#define HAL_SMBUS_MODULE_ENABLED   */
 /*#define HAL_SMARTCARD_MODULE_ENABLED   */
-/*#define HAL_SPI_MODULE_ENABLED   */
+#define HAL_SPI_MODULE_ENABLED
 /*#define HAL_SRAM_MODULE_ENABLED   */
 /*#define HAL_SWPMI_MODULE_ENABLED   */
 #define HAL_TIM_MODULE_ENABLED
@@ -83,6 +82,7 @@
 #define HAL_UART_MODULE_ENABLED
 /*#define HAL_USART_MODULE_ENABLED   */
 /*#define HAL_WWDG_MODULE_ENABLED   */
+/*#define HAL_EXTI_MODULE_ENABLED   */
 /*#define HAL_PSSI_MODULE_ENABLED   */
 #define HAL_GPIO_MODULE_ENABLED
 #define HAL_EXTI_MODULE_ENABLED
@@ -131,7 +131,7 @@
   */
 #if !defined  (HSI48_VALUE)
  #define HSI48_VALUE   ((uint32_t)48000000U) /*!< Value of the Internal High Speed oscillator for USB FS/SDMMC/RNG in Hz.
-                                               The real value my vary depending on manufacturing process variations.*/
+                                              The real value my vary depending on manufacturing process variations.*/
 #endif /* HSI48_VALUE */
 
 /**
@@ -182,7 +182,7 @@
   */
 
 #define  VDD_VALUE					  3300U /*!< Value of VDD in mv */
-#define  TICK_INT_PRIORITY            0U    /*!< tick interrupt priority */
+#define  TICK_INT_PRIORITY            15U    /*!< tick interrupt priority */
 #define  USE_RTOS                     0U
 #define  PREFETCH_ENABLE              0U
 #define  INSTRUCTION_CACHE_ENABLE     1U

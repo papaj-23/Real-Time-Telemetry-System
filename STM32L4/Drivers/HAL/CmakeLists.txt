@@ -5,14 +5,14 @@ file(GLOB HAL_SOURCES
 add_library(hal STATIC
     ${HAL_SOURCES}
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/Legacy/stm32l4xx_hal_can.c
-    ${CMAKE_SOURCE_DIR}/Core/Src/stm32l4xx_hal_timebase_tim.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/stm32l4xx_hal_timebase_tim.c
 )
 
 target_include_directories(hal
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/Inc
         ${CMAKE_CURRENT_SOURCE_DIR}/Inc/Legacy
-        ${CMAKE_SOURCE_DIR}/Core/Inc
+        ${CMAKE_SOURCE_DIR}/config
 )
 
 target_link_libraries(hal

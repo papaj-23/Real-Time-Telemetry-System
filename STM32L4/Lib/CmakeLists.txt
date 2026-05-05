@@ -1,1 +1,2 @@
-add_subdirectory(mpu-6050)
+add_subdirectory(mpu6050_lib)
+add_subdirectory(nrf905_lib)
