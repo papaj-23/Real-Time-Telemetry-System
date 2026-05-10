@@ -12,6 +12,8 @@
 #define nrf_DR_EXTI_IRQn EXTI3_IRQn
 #define SPI1_CS_Pin GPIO_PIN_4
 #define SPI1_CS_GPIO_Port GPIOA
+#define nrf_TXEN_Pin GPIO_PIN_1
+#define nrf_TXEN_GPIO_Port GPIOB
 #define SWDIO_Pin GPIO_PIN_13
 #define SWDIO_GPIO_Port GPIOA
 #define SWCLK_Pin GPIO_PIN_14
@@ -20,8 +22,6 @@
 #define VCP_RX_GPIO_Port GPIOA
 #define LD3_Pin GPIO_PIN_3
 #define LD3_GPIO_Port GPIOB
-#define nrf_TXEN_Pin GPIO_PIN_5
-#define nrf_TXEN_GPIO_Port GPIOB
 #define nrf_PWR_Pin GPIO_PIN_6
 #define nrf_PWR_GPIO_Port GPIOB
 #define nrf_CE_Pin GPIO_PIN_7
