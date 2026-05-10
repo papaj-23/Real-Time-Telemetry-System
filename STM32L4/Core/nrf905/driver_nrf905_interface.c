@@ -41,12 +41,22 @@
 #include "task.h"
 #include "init.h"
 #include "nrf905_event_index.h"
+#include "debug_print.h"
 #include <stdarg.h>
-#include <stdio.h>
 
-extern SPI_HandleTypeDef hspi1;
+extern TaskHandle_t nrf905_task_handle;
 uint8_t tx[64];
 uint8_t rx[64];
+
+static void nrf905_spi_cs_low(void)
+{
+    HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
+}
+
+static void nrf905_spi_cs_high(void)
+{
+    HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
+}
 
 /**
  * @brief  interface spi bus init
@@ -90,32 +100,47 @@ uint8_t nrf905_interface_spi_deinit(void)
  */
 uint8_t nrf905_interface_spi_read(uint8_t reg, uint8_t *buf, uint16_t len)
 {
-    memset(tx, 0, sizeof(tx));
     memset(rx, 0, sizeof(rx));
     uint32_t event = 0U;
 
-    if ((len + 1) > sizeof(tx)) {
+    if ((len + 1U) > sizeof(tx)) {
         return 1;
     }
 
     tx[0] = reg;
     memset(&tx[1], 0xFF, len); // dummy bytes
 
-    xTaskNotifyWait(SPI_RX_CPLT, 0U, &event, 0U);
-    event = 0U;
+    ulTaskNotifyValueClearIndexed(nrf905_task_handle, NRF905_NOTIFY_SPI_INDEX, SPI_TXRX_CPLT | SPI_ABORT | SPI_ERROR);
+
+    nrf905_spi_cs_low();
 
     if(HAL_SPI_TransmitReceive_DMA(&hspi1, tx, rx, len + 1) != HAL_OK)
     {
+        nrf905_spi_cs_high();
         return 1;
     }
 
-    if(xTaskNotifyWait(0, SPI_RX_CPLT, &event, pdMS_TO_TICKS(10)) != pdTRUE)
+    if(xTaskNotifyWaitIndexed(NRF905_NOTIFY_SPI_INDEX, 0, SPI_TXRX_CPLT | SPI_ABORT | SPI_ERROR, &event, pdMS_TO_TICKS(100)) != pdTRUE)
     {
         HAL_SPI_Abort(&hspi1);
+        nrf905_spi_cs_high();
         return 1;
     }
 
-    if(event & SPI_RX_CPLT)
+    nrf905_spi_cs_high();
+
+    if(event & SPI_ABORT)
+    {
+        nrf905_interface_debug_print("nrf905: spi aborted.\n");
+        return 1;
+    }
+    if(event & SPI_ERROR)
+    {
+        nrf905_interface_debug_print("nrf905: spi error.\n");
+        return 1;
+    }
+
+    if(event & SPI_TXRX_CPLT)
     {
         if(buf && len) {
             memcpy(buf, &rx[1], len);
@@ -141,7 +166,7 @@ uint8_t nrf905_interface_spi_write(uint8_t reg, uint8_t *buf, uint16_t len)
     memset(tx, 0, sizeof(tx));
     uint32_t event = 0U;
 
-    if ((len + 1) > sizeof(tx)) {
+    if ((len + 1U) > sizeof(tx)) {
         return 1;
     }
 
@@ -150,21 +175,39 @@ uint8_t nrf905_interface_spi_write(uint8_t reg, uint8_t *buf, uint16_t len)
         memcpy(&tx[1], buf, len);
     }
 
-    xTaskNotifyWait(SPI_TX_CPLT, 0U, &event, 0U);
-    event = 0U;
+    ulTaskNotifyValueClearIndexed(nrf905_task_handle, NRF905_NOTIFY_SPI_INDEX,
+                                SPI_TXRX_CPLT | SPI_ABORT | SPI_ERROR);
 
-    if(HAL_SPI_Transmit_DMA(&hspi1, tx, len + 1) != HAL_OK)
+    nrf905_spi_cs_low();
+
+    if(HAL_SPI_TransmitReceive_DMA(&hspi1, tx, rx, len + 1) != HAL_OK)
     {
+        nrf905_spi_cs_high();
         return 1;
     }
 
-    if(xTaskNotifyWait(0, SPI_TX_CPLT, &event, pdMS_TO_TICKS(10)) != pdTRUE)
+    if(xTaskNotifyWaitIndexed(NRF905_NOTIFY_SPI_INDEX, 0,
+        SPI_TXRX_CPLT | SPI_ABORT | SPI_ERROR, &event, pdMS_TO_TICKS(100)) != pdTRUE)
     {
         HAL_SPI_Abort(&hspi1);
+        nrf905_spi_cs_high();
         return 1;
     }
 
-    if(event & SPI_TX_CPLT)
+    nrf905_spi_cs_high();
+
+    if(event & SPI_ABORT)
+    {
+        nrf905_interface_debug_print("nrf905: spi aborted.\n");
+        return 1;
+    }
+    if(event & SPI_ERROR)
+    {
+        nrf905_interface_debug_print("nrf905: spi error.\n");
+        return 1;
+    }
+
+    if(event & SPI_TXRX_CPLT)
     {
         return 0;
     }
@@ -186,17 +229,36 @@ uint8_t nrf905_interface_spi_transmit(uint8_t *tx, uint8_t *rx, uint16_t len)
 {
     uint32_t event = 0U;
 
-    xTaskNotifyWait(SPI_TXRX_CPLT, 0U, &event, 0U);
-    event = 0U;
+    ulTaskNotifyValueClearIndexed(nrf905_task_handle, NRF905_NOTIFY_SPI_INDEX,
+                                 SPI_TXRX_CPLT | SPI_ABORT | SPI_ERROR);
+
+    nrf905_spi_cs_low();
 
     if(HAL_SPI_TransmitReceive_DMA(&hspi1, tx, rx, len) != HAL_OK)
     {
+        nrf905_spi_cs_high();
         return 1;
     }
 
-    if(xTaskNotifyWait(0, SPI_TXRX_CPLT, &event, pdMS_TO_TICKS(10)) != pdTRUE)
+    if(xTaskNotifyWaitIndexed(NRF905_NOTIFY_SPI_INDEX, 0,
+                            SPI_TXRX_CPLT | SPI_ABORT | SPI_ERROR,
+                            &event, pdMS_TO_TICKS(100)) != pdTRUE)
     {
         HAL_SPI_Abort(&hspi1);
+        nrf905_spi_cs_high();
+        return 1;
+    }
+
+    nrf905_spi_cs_high();
+
+    if(event & SPI_ABORT)
+    {
+        nrf905_interface_debug_print("nrf905: spi aborted.\n");
+        return 1;
+    }
+    if(event & SPI_ERROR)
+    {
+        nrf905_interface_debug_print("nrf905: spi error.\n");
         return 1;
     }
 
@@ -371,18 +433,10 @@ void nrf905_interface_delay_ms(uint32_t ms)
  */
 void nrf905_interface_debug_print(const char *const fmt, ...)
 {
-    char buf[128];
     va_list args;
     va_start(args, fmt);
-    int len = vsnprintf(buf, sizeof(buf), fmt, args);
+    debug_vprint(fmt, args);
     va_end(args);
-
-    if (len > 0) {
-        if (len > (int)sizeof(buf)) {
-            len = sizeof(buf);
-        }
-        HAL_UART_Transmit(&huart2, (uint8_t *)buf, (uint16_t)len, HAL_MAX_DELAY);
-    }
 }
 
 /**
@@ -398,19 +452,19 @@ void nrf905_interface_receive_callback(uint8_t type, uint8_t *buf, uint8_t len)
     {
         case NRF905_STATUS_AM :
         {
-            //nrf905_interface_debug_print("nrf905: address match.\n");
+            nrf905_interface_debug_print("nrf905: address match.\n");
             
             break;
         }
         case NRF905_STATUS_TX_DONE :
         {
-            //nrf905_interface_debug_print("nrf905: tx done.\n");
+            nrf905_interface_debug_print("nrf905: tx done.\n");
             
             break;
         }
         case NRF905_STATUS_RX_DONE :
         {
-            //nrf905_interface_debug_print("nrf905: rx done.\n");
+            nrf905_interface_debug_print("nrf905: rx done.\n");
             
             break;
         }

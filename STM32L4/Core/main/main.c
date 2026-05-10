@@ -4,6 +4,7 @@
 #include "init.h"
 #include "imu_data_input.h"
 #include "nrf905_link.h"
+#include <string.h>
 
 static void blinky_handler(void*);
 static void RTOS_Init(void);

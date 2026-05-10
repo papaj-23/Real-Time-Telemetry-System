@@ -10,6 +10,8 @@
 #define nrf_DR_Pin GPIO_PIN_3
 #define nrf_DR_GPIO_Port GPIOA
 #define nrf_DR_EXTI_IRQn EXTI3_IRQn
+#define SPI1_CS_Pin GPIO_PIN_4
+#define SPI1_CS_GPIO_Port GPIOA
 #define SWDIO_Pin GPIO_PIN_13
 #define SWDIO_GPIO_Port GPIOA
 #define SWCLK_Pin GPIO_PIN_14
@@ -30,7 +32,6 @@ extern DMA_HandleTypeDef hdma_i2c1_rx;
 extern SPI_HandleTypeDef hspi1;
 extern DMA_HandleTypeDef hdma_spi1_tx;
 extern DMA_HandleTypeDef hdma_spi1_rx;
-extern TIM_HandleTypeDef htim6;
 extern UART_HandleTypeDef huart2;
 
 void SystemClock_Config(void);

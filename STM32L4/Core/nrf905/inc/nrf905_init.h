@@ -4,7 +4,7 @@
 #include "driver_nrf905_interface.h"
 
 #define NRF905_BASIC_DEFAULT_PLL_MODE                            NRF905_PLL_MODE_433_MHZ
-#define NRF905_BASIC_DEFAULT_OUTPUT_POWER                        NRF905_OUTPUT_POWER_6_DBM
+#define NRF905_BASIC_DEFAULT_OUTPUT_POWER                        NRF905_OUTPUT_POWER_10_DBM
 #define NRF905_BASIC_DEFAULT_RX_MODE                             NRF905_RX_MODE_NORMAL
 #define NRF905_BASIC_DEFAULT_AUTO_RETRANSMIT                     NRF905_BOOL_FALSE
 #define NRF905_BASIC_DEFAULT_RX_ADDRESS_WIDTH                    NRF905_ADDRESS_WIDTH_4_BYTE

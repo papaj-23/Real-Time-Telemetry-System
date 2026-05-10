@@ -74,7 +74,17 @@ uint8_t nrf905_device_init(nrf905_mode_t mode)
         
         return 1;
     }
+    rf_handle.delay_ms(3);
     
+
+    res = nrf905_set_enable(&rf_handle, NRF905_BOOL_TRUE);
+    if (res != 0)
+    {
+        nrf905_interface_debug_print("nrf905: set enable failed.\n");
+        (void)nrf905_deinit(&rf_handle);
+        
+        return 1;
+    }
     /* disable the chip */
     res = nrf905_set_enable(&rf_handle, NRF905_BOOL_FALSE);
     if (res != 0)

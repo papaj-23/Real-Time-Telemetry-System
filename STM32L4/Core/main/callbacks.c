@@ -9,6 +9,7 @@
 extern TaskHandle_t mpu6050_task_handle;
 extern TaskHandle_t nrf905_task_handle;
 extern MPU_6050_t mpu_handle;
+extern nrf905_handle_t rf_handle;
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
@@ -17,23 +18,34 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     }
 }
 
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
     if(hspi == &hspi1) {
-        if((nrf905_task_handle != NULL) && (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING)) {
+        if((nrf905_task_handle != NULL) && (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)) {
             BaseType_t hpw = pdFALSE;
-            xTaskNotifyFromISR(nrf905_task_handle, SPI_TX_CPLT, eSetBits, &hpw);
+            xTaskNotifyIndexedFromISR(nrf905_task_handle, NRF905_NOTIFY_SPI_INDEX, SPI_TXRX_CPLT, eSetBits, &hpw);
             portYIELD_FROM_ISR(hpw);
         }
     }
 }
 
-void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 {
     if(hspi == &hspi1) {
-        if((nrf905_task_handle != NULL) && (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING)) {
+        if((nrf905_task_handle != NULL) && (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)) {
             BaseType_t hpw = pdFALSE;
-            xTaskNotifyFromISR(nrf905_task_handle, SPI_TXRX_CPLT | SPI_RX_CPLT, eSetBits, &hpw);
+            xTaskNotifyIndexedFromISR(nrf905_task_handle, NRF905_NOTIFY_SPI_INDEX, SPI_ERROR, eSetBits, &hpw);
+            portYIELD_FROM_ISR(hpw);
+        }
+    }
+}
+
+void HAL_SPI_AbortCpltCallback(SPI_HandleTypeDef *hspi)
+{
+    if(hspi == &hspi1) {
+        if((nrf905_task_handle != NULL) && (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)) {
+            BaseType_t hpw = pdFALSE;
+            xTaskNotifyIndexedFromISR(nrf905_task_handle, NRF905_NOTIFY_SPI_INDEX, SPI_ABORT, eSetBits, &hpw);
             portYIELD_FROM_ISR(hpw);
         }
     }
@@ -42,7 +54,7 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
     if(hi2c == &hi2c1) {
-        if((mpu6050_task_handle != NULL) && (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING)) {
+        if((mpu6050_task_handle != NULL) && (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)) {
             MPU_6050_i2c_rxcplt_isr(&mpu_handle);
             BaseType_t hpw = pdFALSE;
             vTaskNotifyGiveFromISR(mpu6050_task_handle, &hpw);
@@ -54,17 +66,20 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if(GPIO_Pin == GPIO_PIN_12) {
-        if((mpu6050_task_handle != NULL) && (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING)) {
+        if((mpu6050_task_handle != NULL) && (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)) {
             MPU_6050_int_isr(&mpu_handle);
+            BaseType_t hpw = pdFALSE;
+            vTaskNotifyGiveFromISR(mpu6050_task_handle, &hpw);
+            portYIELD_FROM_ISR(hpw);
         }
     }
 
     if(GPIO_Pin == nrf_DR_Pin) {
-        if((nrf905_task_handle != NULL) && (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING)) {
-            //nrf905_interrupt_irq_handler();
-            /*BaseType_t hpw = pdFALSE;
-            xTaskNotifyFromISR(nrf905_task_handle, DR_INT, eSetBits, &hpw);
-            portYIELD_FROM_ISR(hpw);*/
+        if((nrf905_task_handle != NULL) && (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)) {
+            rf_handle.finished = 1;
+            BaseType_t hpw = pdFALSE;
+            xTaskNotifyIndexedFromISR(nrf905_task_handle, NRF905_NOTIFY_DR_INDEX, DR_INT, eSetBits, &hpw);
+            portYIELD_FROM_ISR(hpw);
         }
     }
 }

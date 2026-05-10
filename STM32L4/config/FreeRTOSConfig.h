@@ -26,8 +26,8 @@ extern uint32_t SystemCoreClock;
 
 /* Synchronisation primitives */
 #define configUSE_TASK_NOTIFICATIONS            1
-#define configTASK_NOTIFICATION_ARRAY_ENTRIES   1
-#define configUSE_MUTEXES                       0
+#define configTASK_NOTIFICATION_ARRAY_ENTRIES   2
+#define configUSE_MUTEXES                       1
 #define configUSE_RECURSIVE_MUTEXES             0
 #define configUSE_COUNTING_SEMAPHORES           0
 #define configCHECK_FOR_STACK_OVERFLOW          0

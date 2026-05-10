@@ -3,6 +3,7 @@
 #include "driver/spi_master.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_log.h"
 #include <string.h>
 
 #define RF_SPI_HOST         SPI2_HOST
@@ -14,8 +15,7 @@
 #define RF_SPI_CLOCK_HZ     (1000 * 1000)
 #define RF_SPI_QUEUE_SIZE   4
 
-static spi_device_handle_t s_rf_spi;
-extern TaskHandle_t nrf905_task_handle;
+spi_device_handle_t s_rf_spi;
 
 /* SPI config */
 
@@ -145,7 +145,7 @@ esp_err_t rf_gpio_output_init(uint32_t gpio)
 {
     gpio_config_t cfg = {
         .pin_bit_mask = 1ULL << gpio,
-        .mode = GPIO_MODE_OUTPUT,
+        .mode = GPIO_MODE_INPUT_OUTPUT,
         .pull_up_en = GPIO_PULLUP_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
         .intr_type = GPIO_INTR_DISABLE
@@ -164,12 +164,24 @@ esp_err_t rf_gpio_output_write(uint32_t gpio, uint32_t level)
     return gpio_set_level(gpio, level ? 1 : 0);
 }
 
-esp_err_t rf_gpio_DR_init(void)
+esp_err_t irq_enable(void)
+{
+    esp_err_t err;
+
+    err = gpio_install_isr_service(0);
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    return ESP_OK;
+}
+
+esp_err_t rf_gpio_int_input_init(uint32_t gpio, void (*isr_handler)(void *))
 {
     esp_err_t err;
 
     gpio_config_t cfg = {
-        .pin_bit_mask = 1ULL << RF_DR_GPIO,
+        .pin_bit_mask = 1ULL << gpio,
         .mode = GPIO_MODE_INPUT,
         .pull_up_en = GPIO_PULLUP_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
@@ -181,12 +193,7 @@ esp_err_t rf_gpio_DR_init(void)
         return err;
     }
 
-    err = gpio_install_isr_service(0);
-    if (err != ESP_OK) {
-        return err;
-    }
-
-    err = gpio_isr_handler_add(RF_DR_GPIO, rf_dr_isr, NULL);
+    err = gpio_isr_handler_add(gpio, isr_handler, NULL);
     if (err != ESP_OK) {
         return err;
     }
@@ -194,14 +201,7 @@ esp_err_t rf_gpio_DR_init(void)
     return ESP_OK;
 }
 
-esp_err_t rf_gpio_DR_deinit(void)
+esp_err_t rf_gpio_int_input_deinit(uint32_t gpio)
 {
-    return gpio_reset_pin(RF_DR_GPIO);
-}
-
-void rf_dr_isr(void *arg)
-{
-    BaseType_t hpw = pdFALSE;
-    vTaskNotifyGiveFromISR(nrf905_task_handle, &hpw);
-    portYIELD_FROM_ISR(hpw);
+    return gpio_reset_pin(gpio);
 }

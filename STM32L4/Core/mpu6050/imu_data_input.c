@@ -18,7 +18,7 @@ static void delay_ms_wrapper(uint32_t ms);
 static StackType_t mpu6050_stack[MPU6050_STACK_SIZE];
 static StaticTask_t mpu6050_tcb;
 TaskHandle_t mpu6050_task_handle = NULL;
-static UBaseType_t mpu6050_prio = 3;
+static UBaseType_t mpu6050_prio = 1;
 
 QueueHandle_t mpu_queue_handle;
 
@@ -30,10 +30,6 @@ static MPU_6050_rawdata_t inter_buffer = {0};
 MPU_6050_t mpu_handle;
 
 static void mpu6050_handler(void* pvParameters) {
-    uint32_t events = 0U;
-
-    HAL_TIM_Base_Start_IT(&htim6);
-
     mpu_handle = (MPU_6050_t) {
         .hi2c = &hi2c1,
         .rx_buffer = dma_i2c_rx_buf,
@@ -47,12 +43,10 @@ static void mpu6050_handler(void* pvParameters) {
     for(;;) {
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
-        /* i2c dma transfer complete */
         if(mpu_handle.int_status & 1U) {
             //MPU_6050_parse_payload(&mpu_handle);
             xQueueSendToBack(mpu_queue_handle, dma_i2c_rx_buf, portMAX_DELAY);
         }
-
     }
 }
 

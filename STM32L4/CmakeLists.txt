@@ -18,6 +18,7 @@ add_executable(${PROJECT_NAME}
     ${CMAKE_SOURCE_DIR}/Core/main/callbacks.c
     ${CMAKE_SOURCE_DIR}/Core/main/syscalls.c
     ${CMAKE_SOURCE_DIR}/Core/main/sysmem.c
+    ${CMAKE_SOURCE_DIR}/Core/main/debug_print.c
 
     ${CMAKE_SOURCE_DIR}/Core/mpu6050/imu_data_input.c
 

@@ -4,6 +4,7 @@
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "rf_link.h"
 
 #define LED_GPIO GPIO_NUM_2
 
@@ -28,8 +29,6 @@ void blink_task(void *arg)
 void app_main(void)
 {
     my_wifi_connect();
-    xTaskCreate(blink_task, "blink", 2048, NULL, 5, NULL);
     start_udp_client();
-    
-    
+    start_nrf905_thread();
 }

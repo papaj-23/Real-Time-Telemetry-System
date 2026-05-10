@@ -1,4 +1,7 @@
 #include "rf_init.h"
+#include "rf_peripherals.h"
+#include "driver/gpio.h"
+#include "esp_log.h"
 
 nrf905_handle_t rf_handle;
 
