@@ -32,7 +32,8 @@ void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
 }
 
 static void blinky_handler(void* pvParameters) {
-    for(;;) {
+    for(;;)
+    {
         HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
         vTaskDelay(pdMS_TO_TICKS(500));
     }
@@ -41,15 +42,18 @@ static void blinky_handler(void* pvParameters) {
 static void RTOS_Init(void) {
     blinky_handle = xTaskCreateStatic(blinky_handler, "blinky", BLINKY_STACK_SIZE, NULL,
                                     blinky_prio, blinky_stack, &blinky_tcb);
-    if(blinky_handle == NULL) {
+    if(blinky_handle == NULL)
+    {
         Error_Handler();
     }
 
-    if(imu_rtos_init() != 0) {
+    if(imu_rtos_init() != 0)
+    {
         Error_Handler();
     }
 
-    if(nrf905_rtos_init() != 0) {
+    if(nrf905_rtos_init() != 0)
+    {
         Error_Handler();
     }
 }

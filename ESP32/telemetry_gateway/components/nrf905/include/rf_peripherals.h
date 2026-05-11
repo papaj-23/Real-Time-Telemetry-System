@@ -22,7 +22,7 @@ esp_err_t rf_gpio_output_init(uint32_t gpio);
 esp_err_t rf_gpio_output_deinit(uint32_t gpio);
 esp_err_t rf_gpio_output_write(uint32_t gpio, uint32_t level);
 
-esp_err_t irq_enable(void);
+esp_err_t gpio_irq_enable(void);
 esp_err_t rf_gpio_int_input_init(uint32_t gpio, void (*isr_handler)(void *));
 esp_err_t rf_gpio_int_input_deinit(uint32_t gpio);
 

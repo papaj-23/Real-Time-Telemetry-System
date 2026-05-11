@@ -74,8 +74,6 @@ uint8_t nrf905_device_init(nrf905_mode_t mode)
         
         return 1;
     }
-    rf_handle.delay_ms(3);
-    
 
     res = nrf905_set_enable(&rf_handle, NRF905_BOOL_TRUE);
     if (res != 0)

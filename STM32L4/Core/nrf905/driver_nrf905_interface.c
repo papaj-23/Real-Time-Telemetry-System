@@ -80,8 +80,7 @@ uint8_t nrf905_interface_spi_init(void)
  */
 uint8_t nrf905_interface_spi_deinit(void)
 {
-    if(HAL_SPI_DeInit(&hspi1) != HAL_OK)
-    {
+    if(HAL_SPI_DeInit(&hspi1) != HAL_OK) {
         return 1;
     }
 
@@ -100,54 +99,55 @@ uint8_t nrf905_interface_spi_deinit(void)
  */
 uint8_t nrf905_interface_spi_read(uint8_t reg, uint8_t *buf, uint16_t len)
 {
-    memset(rx, 0, sizeof(rx));
     uint32_t event = 0U;
 
-    if ((len + 1U) > sizeof(tx)) {
+    if(buf == NULL) {
+        return 1;
+    }
+
+    if ((len + 1U) > sizeof(tx) || len == 0) {
         return 1;
     }
 
     tx[0] = reg;
     memset(&tx[1], 0xFF, len); // dummy bytes
 
-    ulTaskNotifyValueClearIndexed(nrf905_task_handle, NRF905_NOTIFY_SPI_INDEX, SPI_TXRX_CPLT | SPI_ABORT | SPI_ERROR);
+    ulTaskNotifyValueClearIndexed(nrf905_task_handle, NRF905_NOTIFY_SPI_INDEX,
+                                NRF905_SPI_TXRX_CPLT | NRF905_SPI_ABORT | NRF905_SPI_ERROR);
 
-    nrf905_spi_cs_low();
+    nrf905_spi_cs_low();                          
 
-    if(HAL_SPI_TransmitReceive_DMA(&hspi1, tx, rx, len + 1) != HAL_OK)
-    {
-        nrf905_spi_cs_high();
-        return 1;
+    if(HAL_SPI_TransmitReceive_DMA(&hspi1, tx, rx, len + 1) != HAL_OK) {
+        goto error;
     }
 
-    if(xTaskNotifyWaitIndexed(NRF905_NOTIFY_SPI_INDEX, 0, SPI_TXRX_CPLT | SPI_ABORT | SPI_ERROR, &event, pdMS_TO_TICKS(100)) != pdTRUE)
-    {
+    if(xTaskNotifyWaitIndexed(NRF905_NOTIFY_SPI_INDEX, 0,
+                            NRF905_SPI_TXRX_CPLT | NRF905_SPI_ABORT | NRF905_SPI_ERROR, &event,
+                            pdMS_TO_TICKS(100)) != pdTRUE) {
         HAL_SPI_Abort(&hspi1);
-        nrf905_spi_cs_high();
-        return 1;
+        goto error;
     }
 
     nrf905_spi_cs_high();
 
-    if(event & SPI_ABORT)
-    {
+    if(event & NRF905_SPI_ABORT) {
         nrf905_interface_debug_print("nrf905: spi aborted.\n");
         return 1;
     }
-    if(event & SPI_ERROR)
-    {
+
+    if(event & NRF905_SPI_ERROR) {
         nrf905_interface_debug_print("nrf905: spi error.\n");
         return 1;
     }
 
-    if(event & SPI_TXRX_CPLT)
-    {
-        if(buf && len) {
-            memcpy(buf, &rx[1], len);
-        }
-        return 0;
+    if(event & NRF905_SPI_TXRX_CPLT) {
+        memcpy(buf, &rx[1], len);
     }
 
+    return 0;
+
+error:
+    nrf905_spi_cs_high();
     return 1;
 }
 
@@ -163,55 +163,57 @@ uint8_t nrf905_interface_spi_read(uint8_t reg, uint8_t *buf, uint16_t len)
  */
 uint8_t nrf905_interface_spi_write(uint8_t reg, uint8_t *buf, uint16_t len)
 {
-    memset(tx, 0, sizeof(tx));
     uint32_t event = 0U;
 
-    if ((len + 1U) > sizeof(tx)) {
+    if(buf == NULL) {
+        return 1;
+    }
+
+    if ((len + 1U) > sizeof(tx) || len == 0) {
         return 1;
     }
 
     tx[0] = reg;
-    if (buf && len) {
-        memcpy(&tx[1], buf, len);
-    }
+    memcpy(&tx[1], buf, len);
 
     ulTaskNotifyValueClearIndexed(nrf905_task_handle, NRF905_NOTIFY_SPI_INDEX,
-                                SPI_TXRX_CPLT | SPI_ABORT | SPI_ERROR);
+                                NRF905_SPI_TXRX_CPLT | NRF905_SPI_ABORT | NRF905_SPI_ERROR);
 
     nrf905_spi_cs_low();
 
-    if(HAL_SPI_TransmitReceive_DMA(&hspi1, tx, rx, len + 1) != HAL_OK)
-    {
-        nrf905_spi_cs_high();
-        return 1;
+    if(HAL_SPI_TransmitReceive_DMA(&hspi1, tx, rx, len + 1) != HAL_OK) {
+        goto error;
     }
 
     if(xTaskNotifyWaitIndexed(NRF905_NOTIFY_SPI_INDEX, 0,
-        SPI_TXRX_CPLT | SPI_ABORT | SPI_ERROR, &event, pdMS_TO_TICKS(100)) != pdTRUE)
-    {
+        NRF905_SPI_TXRX_CPLT | NRF905_SPI_ABORT | NRF905_SPI_ERROR, &event, pdMS_TO_TICKS(100)) != pdTRUE) {
         HAL_SPI_Abort(&hspi1);
-        nrf905_spi_cs_high();
-        return 1;
+        goto error;
     }
 
     nrf905_spi_cs_high();
 
-    if(event & SPI_ABORT)
+    if(event & NRF905_SPI_ABORT)
     {
         nrf905_interface_debug_print("nrf905: spi aborted.\n");
         return 1;
     }
-    if(event & SPI_ERROR)
+
+    if(event & NRF905_SPI_ERROR)
     {
         nrf905_interface_debug_print("nrf905: spi error.\n");
         return 1;
     }
 
-    if(event & SPI_TXRX_CPLT)
+    if(event & NRF905_SPI_TXRX_CPLT)
     {
         return 0;
     }
 
+    return 1;
+
+error:
+    nrf905_spi_cs_high();
     return 1;
 }
 
@@ -229,43 +231,49 @@ uint8_t nrf905_interface_spi_transmit(uint8_t *tx, uint8_t *rx, uint16_t len)
 {
     uint32_t event = 0U;
 
+    if(tx == NULL || rx == NULL || len == 0) {
+        return 1;
+    }
+
     ulTaskNotifyValueClearIndexed(nrf905_task_handle, NRF905_NOTIFY_SPI_INDEX,
-                                 SPI_TXRX_CPLT | SPI_ABORT | SPI_ERROR);
+                                 NRF905_SPI_TXRX_CPLT | NRF905_SPI_ABORT | NRF905_SPI_ERROR);
 
     nrf905_spi_cs_low();
 
     if(HAL_SPI_TransmitReceive_DMA(&hspi1, tx, rx, len) != HAL_OK)
     {
-        nrf905_spi_cs_high();
-        return 1;
+        goto error;
     }
 
     if(xTaskNotifyWaitIndexed(NRF905_NOTIFY_SPI_INDEX, 0,
-                            SPI_TXRX_CPLT | SPI_ABORT | SPI_ERROR,
+                            NRF905_SPI_TXRX_CPLT | NRF905_SPI_ABORT | NRF905_SPI_ERROR,
                             &event, pdMS_TO_TICKS(100)) != pdTRUE)
     {
         HAL_SPI_Abort(&hspi1);
-        nrf905_spi_cs_high();
-        return 1;
+        goto error;
     }
 
     nrf905_spi_cs_high();
 
-    if(event & SPI_ABORT)
+    if(event & NRF905_SPI_ABORT)
     {
         nrf905_interface_debug_print("nrf905: spi aborted.\n");
         return 1;
     }
-    if(event & SPI_ERROR)
+    if(event & NRF905_SPI_ERROR)
     {
         nrf905_interface_debug_print("nrf905: spi error.\n");
         return 1;
     }
 
-    if(event & SPI_TXRX_CPLT) {
+    if(event & NRF905_SPI_TXRX_CPLT) {
         return 0;
     }
 
+    return 1;
+
+error:
+    nrf905_spi_cs_high();
     return 1;
 }
 

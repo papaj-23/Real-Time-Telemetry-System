@@ -10,7 +10,8 @@
 
 void blink_task(void *arg)
 {
-    gpio_config_t io_conf = {
+    gpio_config_t io_conf = 
+    {
         .pin_bit_mask = (1ULL << LED_GPIO),
         .mode = GPIO_MODE_OUTPUT,
     };

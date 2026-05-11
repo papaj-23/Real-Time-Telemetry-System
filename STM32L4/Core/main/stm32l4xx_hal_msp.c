@@ -215,11 +215,7 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
     PB4 (NJTRST)     ------> SPI1_MISO
     PB5     ------> SPI1_MOSI
     */
-<<<<<<< HEAD
-    GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
-=======
     GPIO_InitStruct.Pin = GPIO_PIN_1;
->>>>>>> 097ae79 (finally fixed SPI - it was a nucleo board solder brige problem)
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
@@ -300,13 +296,9 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* hspi)
     PB4 (NJTRST)     ------> SPI1_MISO
     PB5     ------> SPI1_MOSI
     */
-<<<<<<< HEAD
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7);
-=======
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_1);
 
     HAL_GPIO_DeInit(GPIOB, GPIO_PIN_4|GPIO_PIN_5);
->>>>>>> 097ae79 (finally fixed SPI - it was a nucleo board solder brige problem)
 
     /* SPI1 DMA DeInit */
     HAL_DMA_DeInit(hspi->hdmatx);

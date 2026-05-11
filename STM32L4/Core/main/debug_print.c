@@ -8,11 +8,22 @@ extern UART_HandleTypeDef huart2;
 
 void debug_vprint(const char *const fmt, va_list args)
 {
-    char buf[128];
-    int len = vsnprintf(buf, sizeof(buf), fmt, args);
+    char buf[160];
+    uint32_t now = HAL_GetTick();
+    int prefix_len = snprintf(buf, sizeof(buf), "[%lu ms] ", (unsigned long)now);
 
-    if (len > 0) {
-        if (len >= (int)sizeof(buf)) {
+    if ((prefix_len < 0) || (prefix_len >= (int)sizeof(buf)))
+    {
+        return;
+    }
+
+    int len = vsnprintf(&buf[prefix_len], sizeof(buf) - (size_t)prefix_len, fmt, args);
+
+    if (len > 0)
+    {
+        len += prefix_len;
+        if (len >= (int)sizeof(buf))
+        {
             len = (int)sizeof(buf) - 1;
         }
         HAL_UART_Transmit(&huart2, (uint8_t *)buf, (uint16_t)len, HAL_MAX_DELAY);
