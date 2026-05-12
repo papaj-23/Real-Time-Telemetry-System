@@ -4,6 +4,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
+#include "freertos/queue.h"
 #include "esp_system.h"
 #include "esp_event.h"
 #include "esp_log.h"
@@ -16,80 +17,64 @@
 
 #define HOST_IP_ADDR "192.168.0.114"
 #define PORT 16161
+#define PAYLOAD_LEN 14U
 
 TaskHandle_t udp_client_task_handle;
+extern QueueHandle_t rf_queue_handle;
 static const char *TAG = "UDP CLIENT:";
-static const char *payload = "Message from ESP32";
 
+static inline int16_t conv_to_i16(uint8_t msb, uint8_t lsb) {
+    uint16_t u = ((uint16_t)msb << 8) | (uint16_t)lsb;
+    return (int16_t)u;
+}
+
+static void parse_payload(const uint8_t *raw_payload, int16_t *dest)
+{
+    for (size_t i = 0; i < PAYLOAD_LEN / 2; i++)
+    {
+        dest[i] = conv_to_i16(raw_payload[2*i], raw_payload[2*i + 1]);
+    }
+}
 
 static void udp_client_task(void *pvParameters)
 {
-    //char rx_buffer[128];
-    //char host_ip[] = HOST_IP_ADDR;
+    uint8_t payload[PAYLOAD_LEN] = {0};
+    int16_t parsed_payload[PAYLOAD_LEN / 2] = {0};
 
-   for(;;)
-   {
-        struct sockaddr_in dest_addr =
+    struct sockaddr_in dest_addr =
+    {
+        .sin_addr.s_addr = inet_addr(HOST_IP_ADDR),
+        .sin_family = AF_INET,
+        .sin_port = htons(PORT)
+    };
+
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0)
+    {
+        ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
+        vTaskDelete(NULL);
+    }
+    ESP_LOGI(TAG, "Socket created, sending to %s:%d", HOST_IP_ADDR, PORT);
+
+    for(;;)
+    {
+        if(xQueueReceive(rf_queue_handle, payload, pdMS_TO_TICKS(100)) == pdPASS)
         {
-            .sin_addr.s_addr = inet_addr(HOST_IP_ADDR),
-            .sin_family = AF_INET,
-            .sin_port = htons(PORT)
-        };
+            parse_payload(payload, parsed_payload);
 
-        int sock = socket(AF_INET, SOCK_DGRAM, 0);
-        if (sock < 0)
-        {
-            ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
-            break;
-        }
-
-        // Set timeout
-        struct timeval timeout = {0};
-        timeout.tv_sec = 10;
-        setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout);
-
-        ESP_LOGI(TAG, "Socket created, sending to %s:%d", HOST_IP_ADDR, PORT);
-
-        while (1)
-        {
-
-            int err = sendto(sock, payload, strlen(payload), 0,
+            int err = sendto(sock, parsed_payload, PAYLOAD_LEN / 2 * sizeof(int16_t), 0,
                             (struct sockaddr *)&dest_addr, sizeof(dest_addr));
             if (err < 0)
             {
                 ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
-                break;
+                close(sock);
+                vTaskDelete(NULL);
             }
-            //ESP_LOGI(TAG, "Message sent");
-
-            /*struct sockaddr_storage source_addr; // Large enough for both IPv4 or IPv6
-            socklen_t socklen = sizeof(source_addr);
-            int len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, (struct sockaddr *)&source_addr, &socklen);
-
-            // Error occurred during receiving
-            if (len < 0) {
-                ESP_LOGE(TAG, "recvfrom failed: errno %d", errno);
-                break;
-            }
-            // Data received
-            else {
-                rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
-                ESP_LOGI(TAG, "Received %d bytes from %s:", len, host_ip);
-                ESP_LOGI(TAG, "%s", rx_buffer);
-                if (strncmp(rx_buffer, "OK: ", 4) == 0) {
-                    ESP_LOGI(TAG, "Received expected message, reconnecting");
-                    break;
-                }
-            }*/
-
-            vTaskDelay(6000 / portTICK_PERIOD_MS);
+            ESP_LOGI(TAG, "Message sent");
         }
-
-        if (sock != -1)
+        else
         {
-            ESP_LOGE(TAG, "Shutting down socket and restarting...");
-            shutdown(sock, 0);
-            close(sock);
+            ESP_LOGI(TAG, "No data received from RF module");
         }
     }
     vTaskDelete(NULL);
