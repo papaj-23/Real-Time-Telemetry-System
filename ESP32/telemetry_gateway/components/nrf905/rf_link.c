@@ -14,7 +14,7 @@
 
 extern nrf905_handle_t rf_handle;
 TaskHandle_t nrf905_task_handle;
-QueueHandle_t mpu_queue_handle;
+QueueHandle_t rf_queue_handle;
 static uint8_t rx_data[PAYLOAD_LEN] = {0};
 static const char *TAG = "NRF905";
 
@@ -70,20 +70,20 @@ static void nrf905_task_handler(void *pvParameters)
         }
 
         if(event & DR_EVENT) {
-            ESP_LOGI(TAG, "Data ready event");
+            //ESP_LOGI(TAG, "Data ready event");
             if(nrf905_get_rx_payload(&rf_handle, rx_data, PAYLOAD_LEN) != 0)
             {
                 ESP_LOGE(TAG, "Failed to get rx payload");
             }
             ESP_LOGE(TAG, "SAMPLE NR %d", cnt_dr);
-            for(int i = 0; i < PAYLOAD_LEN; i++)
+            /*for(int i = 0; i < PAYLOAD_LEN; i++)
             {
                 ESP_LOGI(TAG, "Byte %d: %d", i, rx_data[i]);
-            }
+            }*/
 
-            if(xQueueSendToBack(mpu_queue_handle, rx_data, pdMS_TO_TICKS(100)) != pdPASS)
+            if(xQueueSendToBack(rf_queue_handle, rx_data, pdMS_TO_TICKS(100)) != pdPASS)
             {
-                ESP_LOGI(TAG, "Mpu6050 queue is full");
+                //ESP_LOGE(TAG, "Mpu6050 queue is full");
             }
             cnt_dr++;
         }  
@@ -92,14 +92,21 @@ static void nrf905_task_handler(void *pvParameters)
 
 void start_nrf905_thread(void)
 {
+    rf_queue_handle = xQueueCreate(8, PAYLOAD_LEN);
+    if(rf_queue_handle == NULL)
+    {
+        ESP_LOGE(TAG, "Failed to create RF queue");
+        return;
+    }
+
     BaseType_t pd = xTaskCreate(nrf905_task_handler, "nrf905_task",
                                 2048, NULL, 7, &nrf905_task_handle);
     if(pd != pdPASS)
     {
         ESP_LOGE(TAG, "Failed to create nrf905 task");
+        vQueueDelete(rf_queue_handle);
+        rf_queue_handle = NULL;
     }
-
-    mpu_queue_handle = xQueueCreate(8, PAYLOAD_LEN);
 }
 
 static void rf_dr_isr(void *arg)

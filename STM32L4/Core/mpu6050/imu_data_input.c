@@ -18,7 +18,7 @@ static void delay_ms_wrapper(uint32_t ms);
 static StackType_t mpu6050_stack[MPU6050_STACK_SIZE];
 static StaticTask_t mpu6050_tcb;
 TaskHandle_t mpu6050_task_handle = NULL;
-static UBaseType_t mpu6050_prio = 2;
+static UBaseType_t mpu6050_prio = 1;
 
 QueueHandle_t mpu_queue_handle;
 
@@ -70,6 +70,7 @@ static void mpu6050_handler(void* pvParameters)
             debug_print("mpu6050: wait for notify timeout.\n");
         }
 
+        MPU_6050_parse_payload(&mpu_handle);
         if(xQueueSendToBack(mpu_queue_handle, dma_i2c_rx_buf, portMAX_DELAY) != pdPASS)
         {
             debug_print("mpu6050: queue full.\n");

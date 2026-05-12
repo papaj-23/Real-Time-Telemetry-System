@@ -30,6 +30,6 @@ void blink_task(void *arg)
 void app_main(void)
 {
     my_wifi_connect();
-    start_udp_client();
     start_nrf905_thread();
+    start_udp_client();
 }

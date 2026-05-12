@@ -142,7 +142,7 @@ typedef enum {
 
 /* Sample Rate = GyroRate / (1 + SMPLRT_DIV)
  * GyroRate = 1kHz (DLPF on) or 8kHz (DLPF off) */
-#define SMPLTR_DIV_VAL     0x63U
+#define SMPLTR_DIV_VAL     0x0FU
 
 /* For details check out README section DPLF Setting or vendor datasheet directly */
 #define CONFIG_VAL         0x04U
