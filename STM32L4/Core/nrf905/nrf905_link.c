@@ -37,7 +37,6 @@ static void add_timestamp(uint8_t *buf)
 static void nrf905_handler(void* pvParameters)
 {
     uint32_t events = 0U;
-    uint32_t timestamp = 0U;
     uint8_t buf[PAYLOAD_LEN] = {0};
 
     nrf905_device_init(NRF905_MODE_TX);
@@ -46,8 +45,7 @@ static void nrf905_handler(void* pvParameters)
     for(;;)
     {
         xQueueReceive(mpu_queue_handle, buf, portMAX_DELAY);
-        debug_print("nrf905: item received.\n");
-        timestamp = HAL_GetTick();
+
         add_timestamp(buf);
         
         if(send_data(buf, PAYLOAD_LEN) != 0)
