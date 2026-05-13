@@ -7,7 +7,7 @@
 #include "driver/gpio.h"
 #include "esp_log.h"
 
-#define PAYLOAD_LEN    14U
+#define PAYLOAD_LEN    18U
 #define CD_EVENT       1UL << 0
 #define AM_EVENT       1UL << 1
 #define DR_EVENT       1UL << 2
@@ -56,7 +56,7 @@ static void nrf905_task_handler(void *pvParameters)
         if(xTaskNotifyWait(0, DR_EVENT | AM_EVENT | CD_EVENT,
                         &event, pdMS_TO_TICKS(5000)) != pdTRUE)
         {
-            ESP_LOGI(TAG, "Notification timeout");
+            ESP_LOGE(TAG, "Notification timeout");
         }
         
         if(event & CD_EVENT)
@@ -75,15 +75,10 @@ static void nrf905_task_handler(void *pvParameters)
             {
                 ESP_LOGE(TAG, "Failed to get rx payload");
             }
-            ESP_LOGE(TAG, "SAMPLE NR %d", cnt_dr);
-            /*for(int i = 0; i < PAYLOAD_LEN; i++)
-            {
-                ESP_LOGI(TAG, "Byte %d: %d", i, rx_data[i]);
-            }*/
 
-            if(xQueueSendToBack(rf_queue_handle, rx_data, pdMS_TO_TICKS(100)) != pdPASS)
+            if(xQueueSendToBack(rf_queue_handle, rx_data, pdMS_TO_TICKS(10)) != pdPASS)
             {
-                //ESP_LOGE(TAG, "Mpu6050 queue is full");
+                ESP_LOGE(TAG, "Mpu6050 queue is full");
             }
             cnt_dr++;
         }  
@@ -100,7 +95,7 @@ void start_nrf905_thread(void)
     }
 
     BaseType_t pd = xTaskCreate(nrf905_task_handler, "nrf905_task",
-                                2048, NULL, 7, &nrf905_task_handle);
+                                2048, NULL, 8, &nrf905_task_handle);
     if(pd != pdPASS)
     {
         ESP_LOGE(TAG, "Failed to create nrf905 task");

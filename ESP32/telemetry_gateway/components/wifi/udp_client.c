@@ -17,7 +17,9 @@
 
 #define HOST_IP_ADDR "192.168.0.114"
 #define PORT 16161
-#define PAYLOAD_LEN 14U
+#define PAYLOAD_LEN 18U
+#define DATA_LEN 14U
+#define TIMESTAMP_LEN 4U
 
 TaskHandle_t udp_client_task_handle;
 extern QueueHandle_t rf_queue_handle;
@@ -28,11 +30,20 @@ static inline int16_t conv_to_i16(uint8_t msb, uint8_t lsb) {
     return (int16_t)u;
 }
 
+static inline uint16_t conv_to_u16(uint8_t msb, uint8_t lsb) {
+    return ((uint16_t)msb << 8) | (uint16_t)lsb;
+}
+
 static void parse_payload(const uint8_t *raw_payload, int16_t *dest)
 {
-    for (size_t i = 0; i < PAYLOAD_LEN / 2; i++)
+    for (size_t i = 0; i < DATA_LEN / 2; i++)
     {
         dest[i] = conv_to_i16(raw_payload[2*i], raw_payload[2*i + 1]);
+    }
+
+    for (size_t i = DATA_LEN / 2; i < PAYLOAD_LEN / 2; i++)
+    {
+        dest[i] = conv_to_u16(raw_payload[2*i], raw_payload[2*i + 1]);
     }
 }
 
@@ -58,7 +69,7 @@ static void udp_client_task(void *pvParameters)
 
     for(;;)
     {
-        if(xQueueReceive(rf_queue_handle, payload, pdMS_TO_TICKS(100)) == pdPASS)
+        if(xQueueReceive(rf_queue_handle, payload, pdMS_TO_TICKS(1000)) == pdPASS)
         {
             parse_payload(payload, parsed_payload);
 
@@ -67,14 +78,18 @@ static void udp_client_task(void *pvParameters)
             if (err < 0)
             {
                 ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
-                close(sock);
-                vTaskDelete(NULL);
             }
-            ESP_LOGI(TAG, "Message sent");
+            else
+            {
+                ESP_LOGI(TAG, "Message sent");
+            }
         }
         else
         {
-            ESP_LOGI(TAG, "No data received from RF module");
+            ESP_LOGE(TAG, "No data received from RF module");
+            memset(parsed_payload, 0, DATA_LEN / 2 * sizeof(int16_t));
+            sendto(sock, parsed_payload, PAYLOAD_LEN / 2 * sizeof(int16_t), 0,
+                    (struct sockaddr *)&dest_addr, sizeof(dest_addr));
         }
     }
     vTaskDelete(NULL);
@@ -83,7 +98,7 @@ static void udp_client_task(void *pvParameters)
 void start_udp_client(void) 
 {
     BaseType_t pd = xTaskCreate(udp_client_task, "udp_client",
-                                4096, NULL, 6, &udp_client_task_handle);
+                                4096, NULL, 7, &udp_client_task_handle);
     if(pd != pdPASS)
     {
         ESP_LOGE(TAG, "Failed to create udp client task");
