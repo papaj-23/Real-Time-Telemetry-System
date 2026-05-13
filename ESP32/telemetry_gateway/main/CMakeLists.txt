@@ -8,5 +8,4 @@ idf_component_register(
     REQUIRES
         wifi
         nrf905
-        esp_driver_gpio
 )

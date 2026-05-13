@@ -19,38 +19,46 @@
 #define PORT 16161
 #define PAYLOAD_LEN 18U
 #define DATA_LEN 14U
-#define TIMESTAMP_LEN 4U
-
+#define TIMESTAMP_IDX 14U
 TaskHandle_t udp_client_task_handle;
 extern QueueHandle_t rf_queue_handle;
 static const char *TAG = "UDP CLIENT:";
 
-static inline int16_t conv_to_i16(uint8_t msb, uint8_t lsb) {
+typedef struct __attribute__((packed))
+{
+    int16_t data[DATA_LEN / 2];
+    uint32_t timestamp;
+} payload_t;
+
+static inline int16_t conv_to_i16(uint8_t msb, uint8_t lsb)
+{
     uint16_t u = ((uint16_t)msb << 8) | (uint16_t)lsb;
     return (int16_t)u;
 }
 
-static inline uint16_t conv_to_u16(uint8_t msb, uint8_t lsb) {
-    return ((uint16_t)msb << 8) | (uint16_t)lsb;
+static inline uint32_t conv_timestamp(uint8_t *src)
+{
+    return ((uint32_t)*(src + TIMESTAMP_IDX) << 24) |
+           ((uint32_t)*(src + TIMESTAMP_IDX + 1) << 16) |
+           ((uint32_t)*(src + TIMESTAMP_IDX + 2) << 8) |
+           (uint32_t)*(src + TIMESTAMP_IDX + 3);
 }
 
-static void parse_payload(const uint8_t *raw_payload, int16_t *dest)
+static payload_t parse_payload(uint8_t *raw_payload)
 {
-    for (size_t i = 0; i < DATA_LEN / 2; i++)
+    payload_t payload;
+    for(size_t i = 0; i < DATA_LEN / 2; i++)
     {
-        dest[i] = conv_to_i16(raw_payload[2*i], raw_payload[2*i + 1]);
+        payload.data[i] = conv_to_i16(raw_payload[2 * i], raw_payload[2 * i + 1]);
     }
-
-    for (size_t i = DATA_LEN / 2; i < PAYLOAD_LEN / 2; i++)
-    {
-        dest[i] = conv_to_u16(raw_payload[2*i], raw_payload[2*i + 1]);
-    }
+    payload.timestamp = conv_timestamp(raw_payload);
+    return payload;
 }
 
 static void udp_client_task(void *pvParameters)
 {
     uint8_t payload[PAYLOAD_LEN] = {0};
-    int16_t parsed_payload[PAYLOAD_LEN / 2] = {0};
+    payload_t parsed_payload = {0};
 
     struct sockaddr_in dest_addr =
     {
@@ -71,9 +79,9 @@ static void udp_client_task(void *pvParameters)
     {
         if(xQueueReceive(rf_queue_handle, payload, pdMS_TO_TICKS(1000)) == pdPASS)
         {
-            parse_payload(payload, parsed_payload);
+            parsed_payload = parse_payload(payload);
 
-            int err = sendto(sock, parsed_payload, PAYLOAD_LEN / 2 * sizeof(int16_t), 0,
+            int err = sendto(sock, &parsed_payload, sizeof(payload_t), 0,
                             (struct sockaddr *)&dest_addr, sizeof(dest_addr));
             if (err < 0)
             {
@@ -87,8 +95,8 @@ static void udp_client_task(void *pvParameters)
         else
         {
             ESP_LOGE(TAG, "No data received from RF module");
-            memset(parsed_payload, 0, DATA_LEN / 2 * sizeof(int16_t));
-            sendto(sock, parsed_payload, PAYLOAD_LEN / 2 * sizeof(int16_t), 0,
+            memset(&parsed_payload, 0, (DATA_LEN / 2) * sizeof(int16_t));
+            sendto(sock, &parsed_payload, sizeof(payload_t), 0,
                     (struct sockaddr *)&dest_addr, sizeof(dest_addr));
         }
     }
