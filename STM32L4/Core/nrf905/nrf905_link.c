@@ -7,7 +7,8 @@
 #include "debug_print.h"
 #include "stm32l4xx_hal.h"
 
-#define PAYLOAD_LEN    14U
+#define PAYLOAD_LEN    18U
+#define TIMESTAMP_IDX  14U
 
 static uint8_t send_data(uint8_t *buf, uint8_t len);
 
@@ -24,9 +25,19 @@ static StaticTask_t nrf905_tcb;
 TaskHandle_t nrf905_task_handle = NULL;
 static UBaseType_t nrf905_prio = 2;
 
+static void add_timestamp(uint8_t *buf)
+{
+    uint32_t timestamp = HAL_GetTick();
+    *(buf + TIMESTAMP_IDX) = (timestamp >> 24) & 0xFFU;
+    *(buf + TIMESTAMP_IDX + 1) = (timestamp >> 16) & 0xFFU;
+    *(buf + TIMESTAMP_IDX + 2) = (timestamp >> 8) & 0xFFU;
+    *(buf + TIMESTAMP_IDX + 3) = timestamp & 0xFFU;
+}
+
 static void nrf905_handler(void* pvParameters)
 {
     uint32_t events = 0U;
+    uint32_t timestamp = 0U;
     uint8_t buf[PAYLOAD_LEN] = {0};
 
     nrf905_device_init(NRF905_MODE_TX);
@@ -36,6 +47,9 @@ static void nrf905_handler(void* pvParameters)
     {
         xQueueReceive(mpu_queue_handle, buf, portMAX_DELAY);
         debug_print("nrf905: item received.\n");
+        timestamp = HAL_GetTick();
+        add_timestamp(buf);
+        
         if(send_data(buf, PAYLOAD_LEN) != 0)
         {
             debug_print("nrf905: send data failed.\n");
