@@ -1,10 +1,14 @@
 import socket
 import struct
 import asyncio
-from dataclasses import dataclass
+import websockets
+import json
+from dataclasses import asdict, dataclass
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 16161
+WS_IP = "0.0.0.0"
+WS_PORT = 8765
 BUFFER_SIZE = 128
 PAYLOAD_SIZE = 18
 PAYLOAD_FORMAT = "<7hI"
@@ -78,15 +82,49 @@ def print_float_data(sample_count: int, readable: MPU6050FloatData) -> None:
     )
 
 
-def main() -> None:
+connected_clients: set[websockets.WebSocketServerProtocol] = set()
+
+
+async def websocket_handler(websocket: websockets.WebSocketServerProtocol) -> None:
+    connected_clients.add(websocket)
+    try:
+        await websocket.wait_closed()
+    finally:
+        connected_clients.discard(websocket)
+
+
+async def broadcast_sample(sample_count: int, readable: MPU6050FloatData) -> None:
+    if not connected_clients:
+        return
+
+    message = json.dumps(
+        {
+            "type": "mpu6050_sample",
+            "sample": sample_count,
+            "data": asdict(readable),
+        }
+    )
+    clients = tuple(connected_clients)
+    results = await asyncio.gather(
+        *(client.send(message) for client in clients),
+        return_exceptions=True,
+    )
+
+    for client, result in zip(clients, results):
+        if isinstance(result, Exception):
+            connected_clients.discard(client)
+
+
+async def udp_server() -> None:
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.setblocking(False)
     sock.bind((UDP_IP, UDP_PORT))
     sample_count = 0
 
     print(f"UDP server listening on {UDP_IP}:{UDP_PORT}")
 
     while True:
-        data, addr = sock.recvfrom(BUFFER_SIZE)
+        data, addr = await asyncio.get_running_loop().sock_recvfrom(sock, BUFFER_SIZE)
         try:
             raw = parse_payload_to_int16(data)
         except ValueError as exc:
@@ -99,6 +137,14 @@ def main() -> None:
         if sample_count % SAMPLE_PRINT_INTERVAL == 0:
             print_float_data(sample_count, readable)
 
+        await broadcast_sample(sample_count, readable)
+
+
+async def main() -> None:
+    async with websockets.serve(websocket_handler, WS_IP, WS_PORT):
+        print(f"WebSocket server listening on ws://{WS_IP}:{WS_PORT}")
+        await udp_server()
+
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

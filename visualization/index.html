@@ -1,12 +1,84 @@
-<!DOCTYPE html>
-<html>
-<body>
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MPU6050 WebSocket Viewer</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="viewport" aria-label="Wizualizacja orientacji MPU6050">
+        <canvas id="scene"></canvas>
+      </section>
 
-<h1>Hello</h1>
+      <aside class="telemetry" aria-label="Telemetria MPU6050">
+        <div class="status-row">
+          <span id="status-dot" class="status-dot"></span>
+          <span id="status-text">Rozłączony</span>
+        </div>
 
-<script>
-console.log("js działa");
-</script>
+        <label class="endpoint">
+          WebSocket
+          <input id="ws-url" type="url" value="ws://localhost:8765" />
+        </label>
 
-</body>
+        <button id="connect-button" type="button">Połącz</button>
+
+        <div class="readouts">
+          <div>
+            <span>Roll</span>
+            <strong id="roll-value">0.0°</strong>
+          </div>
+          <div>
+            <span>Pitch</span>
+            <strong id="pitch-value">0.0°</strong>
+          </div>
+          <div>
+            <span>Yaw</span>
+            <strong id="yaw-value">0.0°</strong>
+          </div>
+          <div>
+            <span>Temp</span>
+            <strong id="temp-value">0.0°C</strong>
+          </div>
+        </div>
+
+        <div class="sensor-grid">
+          <div>
+            <span>Accel X</span>
+            <strong id="accel-x">0.000 g</strong>
+          </div>
+          <div>
+            <span>Accel Y</span>
+            <strong id="accel-y">0.000 g</strong>
+          </div>
+          <div>
+            <span>Accel Z</span>
+            <strong id="accel-z">0.000 g</strong>
+          </div>
+          <div>
+            <span>Gyro X corr.</span>
+            <strong id="gyro-x">0.000 °/s</strong>
+          </div>
+          <div>
+            <span>Gyro Y corr.</span>
+            <strong id="gyro-y">0.000 °/s</strong>
+          </div>
+          <div>
+            <span>Gyro Z corr.</span>
+            <strong id="gyro-z">0.000 °/s</strong>
+          </div>
+        </div>
+
+        <div class="packet-row">
+          <span>Sample</span>
+          <strong id="sample-value">0</strong>
+        </div>
+      </aside>
+    </main>
+
+    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
 </html>

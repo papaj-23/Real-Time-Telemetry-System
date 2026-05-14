@@ -1,0 +1,210 @@
+:root {
+  color-scheme: dark;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: #101214;
+  color: #eff3f6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(16, 18, 20, 0.96), rgba(19, 24, 27, 0.82)),
+    #101214;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  min-height: 100vh;
+}
+
+.viewport {
+  position: relative;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+#scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: grab;
+}
+
+#scene:active {
+  cursor: grabbing;
+}
+
+.telemetry {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  padding: 24px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 18, 20, 0.92);
+}
+
+.status-row,
+.packet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.status-row {
+  justify-content: flex-start;
+  min-height: 26px;
+  font-weight: 700;
+}
+
+.status-dot {
+  width: 11px;
+  height: 11px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #c64c40;
+  box-shadow: 0 0 0 4px rgba(198, 76, 64, 0.12);
+}
+
+.status-dot.connected {
+  background: #46d37b;
+  box-shadow: 0 0 0 4px rgba(70, 211, 123, 0.14);
+}
+
+.endpoint {
+  display: grid;
+  gap: 8px;
+  color: #aab5bc;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.endpoint input {
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  outline: none;
+  background: #171b1f;
+  color: #eff3f6;
+}
+
+.endpoint input:focus {
+  border-color: #68b7d9;
+  box-shadow: 0 0 0 3px rgba(104, 183, 217, 0.16);
+}
+
+#connect-button {
+  height: 42px;
+  border: 0;
+  border-radius: 6px;
+  background: #68b7d9;
+  color: #071015;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+#connect-button:active {
+  transform: translateY(1px);
+}
+
+.readouts,
+.sensor-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.readouts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sensor-grid {
+  grid-template-columns: 1fr;
+}
+
+.readouts div,
+.sensor-grid div,
+.packet-row {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  background: #171b1f;
+}
+
+.readouts span,
+.sensor-grid span,
+.packet-row span {
+  display: block;
+  margin-bottom: 6px;
+  color: #aab5bc;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.readouts strong,
+.sensor-grid strong,
+.packet-row strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #ffffff;
+  font-size: 20px;
+  line-height: 1.15;
+}
+
+.sensor-grid strong,
+.packet-row strong {
+  font-size: 16px;
+}
+
+@media (max-width: 860px) {
+  body {
+    overflow: auto;
+  }
+
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .viewport {
+    min-height: 58vh;
+  }
+
+  .telemetry {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 0;
+  }
+
+  .sensor-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .telemetry {
+    padding: 18px;
+  }
+
+  .readouts,
+  .sensor-grid {
+    grid-template-columns: 1fr;
+  }
+}
