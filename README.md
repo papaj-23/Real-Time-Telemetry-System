@@ -4,6 +4,10 @@ This project is a telemetry system built around two microcontrollers, a 433 MHz 
 
 The project collects data from an MPU6050 sensor connected to an STM32L4, transmits it over radio using an nRF905 transceiver, receives it on an ESP32, forwards it over Wi-Fi as UDP, and exposes it to the browser through a Python WebSocket bridge. The visualization conditions the IMU data and renders the orientation of a 3D object. With level zeroing, it can also work as a simple digital level.
 
+<img width="3024" height="4032" alt="IMG_6136" src="https://github.com/user-attachments/assets/36cbcafd-8c4f-4b88-ae2f-182b567be3b0" />
+
+https://github.com/user-attachments/assets/8c4d9758-6beb-4464-a1ff-8807864b7a68
+
 ## Data Flow
 
 ```text
