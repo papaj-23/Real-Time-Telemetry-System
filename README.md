@@ -1,6 +1,6 @@
-# RTOS Telemetry Project
+# Real-Time Telemetry System
 
-A minimal telemetry system built around two microcontrollers, a 433 MHz radio link, and a browser-based 3D visualization.
+This project is a telemetry system built around two microcontrollers, a 433 MHz radio link, and a browser-based 3D visualization.
 
 The project collects data from an MPU6050 sensor connected to an STM32L4, transmits it over radio using an nRF905 transceiver, receives it on an ESP32, forwards it over Wi-Fi as UDP, and exposes it to the browser through a Python WebSocket bridge. The visualization conditions the IMU data and renders the orientation of a 3D object. With level zeroing, it can also work as a simple digital level.
 
@@ -24,12 +24,10 @@ On the ESP32 side, the RF frame is parsed into `int16_t` sensor values and a tim
 
 ```text
 .
-+-- STM32L4/              # transmitter firmware: STM32L432KC + MPU6050 + nRF905
-+-- ESP32/telemetry_gateway/
-|   +-- main/             # ESP-IDF application entry point
-|   +-- components/       # Wi-Fi, UDP, and nRF905 components
-+-- server/               # Python UDP -> WebSocket bridge
-+-- visualization/        # browser-based 3D visualization
++-- STM32L4/                    # transmitter firmware: STM32L432KC + MPU6050 + nRF905
++-- ESP32/telemetry_gateway/    # IoT gate firmware: nRF905 as receiver + UDP client
++-- server/                     # Python UDP server -> WebSocket bridge
++-- visualization/              # browser-based 3D visualization
 ```
 
 ### `STM32L4/`
@@ -41,7 +39,7 @@ Main directories:
 - `Core/main/` - system, peripheral, and FreeRTOS scheduler initialization
 - `Core/mpu6050/` - MPU6050 data acquisition task
 - `Core/nrf905/` - nRF905 initialization and radio transmission logic
-- `Lib/mpu6050_lib/` - custom MPU6050 library written from scratch: [library README](STM32L4/Lib/mpu6050_lib/README.md)
+- `Lib/mpu6050_lib/` - custom MPU6050 library written from scratch: [https://github.com/papaj-23/MPU-6050-driver-for-stm32]
 - `Lib/nrf905_lib/` - integrated `libdriver`-based nRF905 driver
 - `FreeRTOS/` - local FreeRTOS sources
 - `Drivers/` - STM32 HAL/CMSIS
@@ -87,7 +85,7 @@ FreeRTOS is used on both microcontrollers.
 On STM32L4:
 
 - statically created tasks for LED, MPU6050, and nRF905 handling
-- static memory allocation for the idle task
+- static memory allocation for idle task
 - `mpu_queue_handle` queue between the MPU6050 task and the nRF905 task
 - task notifications for interrupt-driven synchronization: MPU6050 INT, I2C RX complete, nRF905 DR
 - dynamically created FreeRTOS queue for MPU6050 frames
